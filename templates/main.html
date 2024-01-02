@@ -47,7 +47,7 @@
         </div>
     </div>
     <div class="col-md-8 p-3" style="max-height: 100vh; overflow-y: auto;">
-        <label for="trademark">Image</label>
+        <label for="trademark">Image <span id="image_id"></span></label>
         <div class="alert border-light-subtle">
             <img id="trademark" src="" alt="" style="width: 100%; height: auto;">
             <canvas style="position: absolute; top: var(--bs-alert-padding-y);
@@ -65,20 +65,12 @@
 <script>
     const viewer = document.getElementById('trademark');
     const canvas = document.getElementById('trademark-mask');
+    const image_id = document.getElementById('image_id')
     const boxes = {{ boxes | safe }};
     const n_images = {{ n_images }};
-    const hue_colors = [
-        '#1f77b4',
-        '#ff7f0e',
-        '#2ca02c',
-        '#d62728',
-        '#9467bd',
-        '#8c564b',
-        '#e377c2',
-        '#7f7f7f',
-        '#bcbd22',
-        '#17becf'
-    ]
+    const hue_colors = ['#045993', '#db6000', '#118011', '#b40c0d',
+        '#75499c', '#6d392e', '#c059a1', '#606060',
+        '#9b9c07', '#009dad'];
     let p = 0;  // pointer, index of boxes
     check_image_controller_status(p);
     view_trademark_image(p);
@@ -87,6 +79,7 @@
         viewer.src = '/trademark?case_idx={{ case_idx }}&image_idx=' + p.toString();
         viewer.alt = 'Preview of trademark image ' + p.toString() +
             ' in case {{ case_idx }}.';
+        image_id.textContent = p;
         viewer.onload = () => {
             let context = canvas.getContext('2d');
             canvas.width = viewer.width;
@@ -96,7 +89,7 @@
             let scale_y = viewer.offsetHeight / viewer.naturalHeight;
             for (let i = 0; i < Object.keys(boxes[p]).length; i++) {
                 let box = boxes[p][i];
-                context.strokeStyle = hue_colors[box.language_code];
+                context.strokeStyle = hue_colors[box.language_code % hue_colors.length];
                 context.strokeRect(
                     box.left_upper_x * scale_x, box.left_upper_y * scale_y,
                     (box.right_upper_x - box.left_upper_x) * scale_x,

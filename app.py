@@ -5,6 +5,7 @@ import paramiko
 import yaml
 from flask import Flask, render_template, request, send_file, redirect
 from sqlalchemy import create_engine
+from sqlalchemy.exc import OperationalError
 from sshtunnel import SSHTunnelForwarder
 import atexit
 import os
@@ -113,9 +114,22 @@ def index():
 
 
 def download_images(case_idx):
-    global sftp
-    images = pd.read_sql_query(query_get_images, engine, params=[(case_idx,)],
-                               index_col='image_idx')
+    global sftp, server
+    images = pd.DataFrame()
+    for _ in range(5):  # number of retries
+        try:
+            images = pd.read_sql_query(query_get_images, engine, params=[(case_idx,)],
+                                       index_col='image_idx')
+            break
+        except OperationalError:
+            server = SSHTunnelForwarder(
+                (config['ssh_host'], config['ssh_port']),
+                ssh_private_key=config['ssh_private_key_path'],
+                ssh_username=config['ssh_username'],
+                remote_bind_address=(config['remote_host'], config['remote_port']),
+                local_bind_address=('0.0.0.0', config['db_port'])
+            )
+            server.start()
     for idx, row in images.iterrows():
         remote_file_path = row['path']
         local_file_path = os.path.join(images_dir, f"tm_{case_idx}_{idx}.png")
@@ -125,6 +139,9 @@ def download_images(case_idx):
                     sftp.get(remote_file_path, local_file_path)
                     break
                 except paramiko.ssh_exception.SSHException:  # server connection dropped
+                    ssh_client.connect(config['ssh_host'], config['ssh_port'],
+                                       config['ssh_username'],
+                                       pkey=private_key)  # connect to server
                     sftp = ssh_client.open_sftp()
     n_images = images.shape[0]
     return n_images
