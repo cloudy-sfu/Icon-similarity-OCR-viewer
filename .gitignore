@@ -153,5 +153,4 @@ cython_debug/
 
 data/*.yaml
 !data/*.public.yaml
-static/cache/*
-!static/cache/.placeholder
+tmp/

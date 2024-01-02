@@ -1,0 +1,19 @@
+# postgresql settings
+db_name: cn_trademarks
+db_username:
+db_password:
+# address accessible by local machine
+db_host: 127.0.0.1
+db_port: 5002
+
+# SSH settings
+ssh_host:
+ssh_port:
+ssh_username:
+ssh_private_key_path:
+
+# SSH Tunnel
+remote_host: 127.0.0.1
+remote_port: 5432
+# local_host is default 0.0.0.0
+# local_port is the same as db_port

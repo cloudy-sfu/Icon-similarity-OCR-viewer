@@ -1,0 +1,1 @@
+select image_idx, path from images where case_idx = %s
